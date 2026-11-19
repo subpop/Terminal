@@ -1,4 +1,16 @@
 <?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
-    </channel></rss>
+        <item>
+            <title>1.0</title>
+            <pubDate>Thu, 19 Nov 2026 14:06:21 -0500</pubDate>
+            <link>https://subpop.github.io/Terminal</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/subpop/Terminal/releases/download/v1.0/Terminal-1.0.dmg" length="5466817" type="application/octet-stream" sparkle:edSignature="jvyzpXqFzdy1TLzYmTiztNLafwsKJ/HgI9AcXC7gHQvztCSVKryKL4PGqU3ChIRRRhs/j+yVfAM1bLAf+EhVCw=="/>
+        <description><![CDATA[<div>
+    
+</div>]]></description>
+</item>
+</channel></rss>
