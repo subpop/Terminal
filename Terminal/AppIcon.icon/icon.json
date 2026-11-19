@@ -1,0 +1,79 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-gray:1.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "hidden" : true,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : "system-dark"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "system-light"
+            }
+          ],
+          "image-name" : "Prompt.png",
+          "name" : "Prompt",
+          "position" : {
+            "scale" : 0.85,
+            "translation-in-points" : [
+              -135,
+              -174
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    },
+    {
+      "hidden" : false,
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : "system-dark"
+            },
+            {
+              "appearance" : "dark",
+              "value" : "system-light"
+            }
+          ],
+          "image-name" : "%_.png",
+          "name" : "%_",
+          "position" : {
+            "scale" : 1.1,
+            "translation-in-points" : [
+              -93,
+              -121
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
