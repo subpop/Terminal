@@ -167,6 +167,27 @@ struct WorkspaceStoreTests {
         #expect(store.processName == "zsh")
     }
 
+    @Test func focusMovesToNearestPaneInRequestedDirection() throws {
+        let store = WorkspaceStore()
+        let first = try #require(store.focusedPaneID)
+        store.split(over: first, edge: .trailing)
+        let second = try #require(store.focusedPaneID)
+        store.split(over: second, edge: .bottom)
+        let third = try #require(store.focusedPaneID)
+
+        store.focus(first)
+        #expect(store.adjacentPane(in: .leading) == nil)
+        #expect(store.adjacentPane(in: .trailing) == second)
+        #expect(store.adjacentPane(in: .top) == second)
+
+        store.focus(second)
+        #expect(store.adjacentPane(in: .bottom) == third)
+        store.toggleMaximizedPane(second)
+        #expect(store.focusAdjacentPane(in: .bottom) == third)
+        #expect(store.focusedPaneID == third)
+        #expect(store.maximizedPaneID == nil)
+    }
+
     @Test func terminalTypesMatchChildEnvironment() {
         for type in TerminalType.allCases {
             let options = TerminalOptions(termName: type.rawValue)

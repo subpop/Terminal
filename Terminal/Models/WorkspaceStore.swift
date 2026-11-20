@@ -99,6 +99,19 @@ final class WorkspaceStore {
         focusedPaneID = paneID
     }
 
+    func adjacentPane(in direction: DropEdge) -> UUID? {
+        guard let focusedPaneID else { return nil }
+        return root.adjacentLeaf(to: focusedPaneID, in: direction)
+    }
+
+    @discardableResult
+    func focusAdjacentPane(in direction: DropEdge) -> UUID? {
+        guard let paneID = adjacentPane(in: direction) else { return nil }
+        maximizedPaneID = nil
+        focus(paneID)
+        return paneID
+    }
+
     func toggleMaximizedPane(_ paneID: UUID) {
         guard root.leafCount > 1, root.contains(leaf: paneID) else { return }
         maximizedPaneID = maximizedPaneID == paneID ? nil : paneID

@@ -127,6 +127,20 @@ struct WorkspaceCommands: Commands {
                 }
             }
             .disabled(store == nil)
+
+            Divider()
+            Button("Focus Pane to the Left") { focusPane(.leading) }
+                .keyboardShortcut(.leftArrow, modifiers: [.command, .shift])
+                .disabled(store?.adjacentPane(in: .leading) == nil)
+            Button("Focus Pane to the Right") { focusPane(.trailing) }
+                .keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
+                .disabled(store?.adjacentPane(in: .trailing) == nil)
+            Button("Focus Pane Above") { focusPane(.top) }
+                .keyboardShortcut(.upArrow, modifiers: [.command, .shift])
+                .disabled(store?.adjacentPane(in: .top) == nil)
+            Button("Focus Pane Below") { focusPane(.bottom) }
+                .keyboardShortcut(.downArrow, modifiers: [.command, .shift])
+                .disabled(store?.adjacentPane(in: .bottom) == nil)
         }
         CommandGroup(after: .textEditing) {
             Button("Find…") { find(.showFindInterface) }
@@ -213,6 +227,14 @@ struct WorkspaceCommands: Commands {
             return
         }
         tabs.addWorkspace()
+    }
+
+    private func focusPane(_ direction: DropEdge) {
+        guard let paneID = store?.focusAdjacentPane(in: direction) else { return }
+        Task { @MainActor in
+            await Task.yield()
+            LocalTerminalNSView.focus(paneID)
+        }
     }
 
     private func find(_ action: NSTextFinder.Action) {

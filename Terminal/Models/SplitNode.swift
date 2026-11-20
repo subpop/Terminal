@@ -13,6 +13,7 @@
 // limitations under the License.
 
 
+import CoreGraphics
 import Foundation
 
 indirect enum SplitNode: Identifiable, Equatable {
@@ -54,6 +55,61 @@ indirect enum SplitNode: Identifiable, Equatable {
         switch self {
         case .leaf: return false
         case .split(_, _, _, let a, let b): return a.contains(node: id) || b.contains(node: id)
+        }
+    }
+
+    func adjacentLeaf(to leafID: UUID, in direction: DropEdge) -> UUID? {
+        guard let origin = leafCenters(in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            .first(where: { $0.id == leafID })?.center else { return nil }
+
+        let candidates = leafCenters(in: CGRect(x: 0, y: 0, width: 1, height: 1))
+            .filter { $0.id != leafID }
+            .compactMap { leaf -> (id: UUID, score: CGFloat)? in
+                let dx = leaf.center.x - origin.x
+                let dy = leaf.center.y - origin.y
+                let primaryDistance: CGFloat
+                let secondaryDistance: CGFloat
+                switch direction {
+                case .leading:
+                    guard dx < 0 else { return nil }
+                    primaryDistance = -dx
+                    secondaryDistance = abs(dy)
+                case .trailing:
+                    guard dx > 0 else { return nil }
+                    primaryDistance = dx
+                    secondaryDistance = abs(dy)
+                case .top:
+                    guard dy < 0 else { return nil }
+                    primaryDistance = -dy
+                    secondaryDistance = abs(dx)
+                case .bottom:
+                    guard dy > 0 else { return nil }
+                    primaryDistance = dy
+                    secondaryDistance = abs(dx)
+                case .center:
+                    return nil
+                }
+                return (leaf.id, primaryDistance + secondaryDistance)
+            }
+
+        return candidates.min { $0.score < $1.score }?.id
+    }
+
+    private func leafCenters(in rect: CGRect) -> [(id: UUID, center: CGPoint)] {
+        switch self {
+        case .leaf(let id):
+            return [(id, CGPoint(x: rect.midX, y: rect.midY))]
+        case .split(_, let axis, let ratio, let first, let second):
+            let firstRect: CGRect
+            let secondRect: CGRect
+            if axis == .horizontal {
+                firstRect = CGRect(x: rect.minX, y: rect.minY, width: rect.width * ratio, height: rect.height)
+                secondRect = CGRect(x: firstRect.maxX, y: rect.minY, width: rect.width * (1 - ratio), height: rect.height)
+            } else {
+                firstRect = CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: rect.height * ratio)
+                secondRect = CGRect(x: rect.minX, y: firstRect.maxY, width: rect.width, height: rect.height * (1 - ratio))
+            }
+            return first.leafCenters(in: firstRect) + second.leafCenters(in: secondRect)
         }
     }
 
