@@ -24,8 +24,9 @@ import Foundation
 enum ShellIntegration {
     /// Environment for a new terminal process.
     ///
-    /// `base` is typically `TerminalType.processEnvironment` (TERM, COLORTERM,
-    /// etc.). Extra keys are only added — never removed.
+    /// `base` is typically `TerminalType.processEnvironment` (now a full
+    /// passthrough of the parent environment with TERM/COLORTERM/LANG overrides).
+    /// Extra keys are only added — never removed.
     static func environment(base: [String], enableShellIntegration: Bool) -> [String] {
         var env = base
         if !env.contains(where: { $0.hasPrefix("TERM_PROGRAM=") }) {

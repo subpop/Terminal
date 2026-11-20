@@ -123,7 +123,16 @@ enum TerminalType: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
     var processEnvironment: [String] {
-        Terminal.getEnvironmentVariables(termName: rawValue, trueColor: self == .xterm256color)
+        var env = ProcessInfo.processInfo.environment
+        // Override terminal-specific keys.
+        env["TERM"] = rawValue
+        if self == .xterm256color {
+            env["COLORTERM"] = "truecolor"
+        }
+        if env["LANG"] == nil {
+            env["LANG"] = "en_US.UTF-8"
+        }
+        return env.map { "\($0.key)=\($0.value)" }
     }
 }
 
