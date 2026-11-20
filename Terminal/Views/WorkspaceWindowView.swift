@@ -128,7 +128,12 @@ struct WorkspaceWindowView: View {
         window.titleVisibility = .hidden
         window.tabbingMode = .disallowed
         NSWindow.allowsAutomaticWindowTabbing = false
-        let delegate = WindowCloseDelegate(tabs: tabs, settings: settings)
+        guard objc_getAssociatedObject(window, &AssociatedKeys.delegate) == nil else { return }
+        let delegate = WindowCloseDelegate(
+            tabs: tabs,
+            settings: settings,
+            forwardingDelegate: window.delegate
+        )
         window.delegate = delegate
         objc_setAssociatedObject(window, &AssociatedKeys.delegate, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
     }
@@ -189,13 +194,27 @@ private enum AssociatedKeys { static var delegate = 0 }
 private final class WindowCloseDelegate: NSObject, NSWindowDelegate {
     let tabs: WorkspaceTabs
     let settings: TerminalSettings
+    nonisolated(unsafe) private let forwardingDelegate: (any NSWindowDelegate)?
 
-    init(tabs: WorkspaceTabs, settings: TerminalSettings) {
+    init(tabs: WorkspaceTabs, settings: TerminalSettings, forwardingDelegate: (any NSWindowDelegate)?) {
         self.tabs = tabs
         self.settings = settings
+        self.forwardingDelegate = forwardingDelegate
+    }
+
+    nonisolated override func responds(to aSelector: Selector!) -> Bool {
+        super.responds(to: aSelector) || forwardingDelegate?.responds(to: aSelector) == true
+    }
+
+    nonisolated override func forwardingTarget(for aSelector: Selector!) -> Any? {
+        guard let forwardingDelegate, forwardingDelegate.responds(to: aSelector) else {
+            return super.forwardingTarget(for: aSelector)
+        }
+        return forwardingDelegate
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard forwardingDelegate?.windowShouldClose?(sender) ?? true else { return false }
         if !settings.askBeforeClosing { return true }
         let hasRunningProcess = tabs.workspaces.contains {
             $0.hasRunningProcess(where: LocalTerminalNSView.hasRunningCommand)
@@ -204,6 +223,7 @@ private final class WindowCloseDelegate: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
+        forwardingDelegate?.windowWillClose?(notification)
         for workspace in tabs.workspaces {
             LocalTerminalNSView.terminateSessions(Array(workspace.panes.keys))
             WorkspaceRegistry.shared.unregister(windowID: workspace.windowID)
