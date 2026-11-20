@@ -136,17 +136,6 @@ struct WorkspaceCommands: Commands {
             Button("Find Previous") { find(.previousMatch) }
                 .keyboardShortcut("g", modifiers: [.command, .shift])
         }
-        CommandGroup(after: .toolbar) {
-            Button("Previous Prompt") { jumpToPreviousPrompt() }
-                .keyboardShortcut(.upArrow, modifiers: [.command, .option])
-                .disabled(store?.focusedPaneID == nil)
-            Button("Next Prompt") { jumpToNextPrompt() }
-                .keyboardShortcut(.downArrow, modifiers: [.command, .option])
-                .disabled(store?.focusedPaneID == nil)
-            Button("Clear to Start") { clearScrollback() }
-                .keyboardShortcut("k", modifiers: [.command, .control])
-                .disabled(store?.focusedPaneID == nil)
-        }
         CommandGroup(before: .toolbar) {
             Button("Increase Font Size") {
                 settings.fontSize = min(settings.fontSize + 1, TerminalSettings.maximumFontSize)
@@ -169,6 +158,17 @@ struct WorkspaceCommands: Commands {
             Divider()
         }
         CommandGroup(after: .toolbar) {
+            Button("Previous Prompt") { jumpToPreviousPrompt() }
+                .keyboardShortcut(.upArrow, modifiers: [.command, .option])
+                .disabled(store?.focusedPaneID == nil)
+            Button("Next Prompt") { jumpToNextPrompt() }
+                .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+                .disabled(store?.focusedPaneID == nil)
+            Button("Clear to Start") { clearScrollback() }
+                .keyboardShortcut("k", modifiers: [.command, .control])
+                .disabled(store?.focusedPaneID == nil)
+
+            Divider()
             Button("Show Tab 1") { tabs?.selectWorkspace(at: 0) }
                 .keyboardShortcut("1", modifiers: .command)
                 .disabled((tabs?.workspaces.count ?? 0) < 1)
