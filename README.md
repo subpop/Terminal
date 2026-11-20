@@ -140,6 +140,25 @@ Requires `gh` CLI (`gh auth login`) and `pandoc` for changelog HTML, plus `gener
 
 Each `<item>` contains `sparkle:version` (build), `sparkle:shortVersionString` (marketing), `sparkle:minimumSystemVersion`, and a signed `enclosure` with `sparkle:edSignature` validated against `SUPublicEDKey`.
 
+## Performance
+
+PTY read throughput measured with [vtebench](https://github.com/alacritty/vtebench) (`cargo run --release -- --dat results.dat`, 10s per benchmark, default 1 MiB sample). Values are median time per sample in milliseconds — lower is better.
+
+| Benchmark | Terminal | Apple Terminal | Ghostty |
+|---|---:|---:|---:|
+| dense_cells | 6.0 ms | 27.0 ms | 6.0 ms |
+| medium_cells | 5.0 ms | 50.0 ms | 4.0 ms |
+| scrolling | 11.0 ms | 211.0 ms | 17.0 ms |
+| scrolling_bottom_region | 13.0 ms | 177.5 ms | 14.0 ms |
+| scrolling_bottom_small_region | 13.0 ms | 810.0 ms | 14.0 ms |
+| scrolling_fullscreen | 15.0 ms | 999.0 ms | 21.0 ms |
+| scrolling_top_region | 15.0 ms | 891.5 ms | 14.0 ms |
+| scrolling_top_small_region | 13.0 ms | 328.0 ms | 14.0 ms |
+| sync_medium_cells | 6.0 ms | 7395.5 ms | 5.0 ms |
+| unicode | 4.0 ms | 82.0 ms | 2.0 ms |
+
+Source files generated 2026-11-20, medians over 352–3628 samples per benchmark; Apple Terminal produced fewer samples on slow benchmarks due to the 10s timeout). vtebench stresses only PTY read speed and does not measure frame rate or input latency — see its [disclaimer](https://github.com/alacritty/vtebench#disclaimer).
+
 ## Project layout
 
 ```
