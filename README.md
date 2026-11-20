@@ -7,8 +7,12 @@ A native macOS terminal emulator built with SwiftUI and [SwiftTerm](https://gith
 ## Features
 
 - Multiple panes with split, maximize, and native tab support.
-- SwiftTerm-powered emulation with Metal rendering, including ligatures, 24-bit color, and sixel graphics.
-- Per-pane working directory and process tracking for title, subtitle, and close-confirmation.
+- SwiftTerm-powered emulation with Metal rendering, including ligatures, 24-bit color, sixel, iTerm2, and Kitty graphics.
+- Per-pane working directory and process tracking for title, subtitle, and close-confirmation; new splits and tabs inherit the current directory.
+- Clickable hyperlinks (OSC 8, `Cmd`-hover/`Cmd`-click, toggle in Terminal settings) with implicit URL fallback.
+- Semantic prompts (OSC 133) — **Previous Prompt** (`Opt+Cmd+Up`), **Next Prompt** (`Opt+Cmd+Down`), and **Clear to Start** (`Ctrl+Cmd+K`) backed by SwiftTerm's scroll-to-prompt.
+- Shell integration — `TERM_PROGRAM`, `COLORTERM`, and `TERMINAL_SHELL_INTEGRATION` environment for new sessions plus bundled `zsh`/`bash` OSC 7/133 scripts.
+- Bidirectional text, Kitty keyboard protocol, and mouse-reporting support via SwiftTerm.
 - Appearance controls — system/light/dark, foreground/background tints, font chooser, and cursor style.
 - Window and tab title customization, default geometry, and shell configuration.
 - Find interface backed by SwiftTerm's search engine.
@@ -29,8 +33,8 @@ open Terminal.xcodeproj
 
 Select the **Terminal** scheme and run ( <kbd>Cmd+R</kbd> ). Dependencies resolve via Swift Package Manager on first build:
 
-- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) — terminal emulation (1.5.x)
-- [Sparkle](https://github.com/sparkle-project/Sparkle) — app updates (2.6.x)
+- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) — terminal emulation (1.99.x)
+- [Sparkle](https://github.com/sparkle-project/Sparkle) — app updates (2.10.x)
 
 ### Secrets
 
@@ -68,9 +72,9 @@ All settings live in the in-app **Settings** window (`Cmd+,`):
 
 - **General** — appearance (system/light/dark), tints, font, window size, cursor, and Sparkle updates (automatic checks + manual "Check for Updates…").
 - **Shell** — default login shell or custom command, exit behavior, and close confirmation.
-- **Terminal** — `TERM` declaration, input options, bell, and scrollback.
+- **Terminal** — `TERM` declaration, input options, bell, scrollback, hyperlinks (`Enable OSC 8 hyperlinks`), and shell integration (`Enable shell integration`).
 
-Settings are persisted to `UserDefaults` and exposed via `@Observable` `TerminalSettings` (`Terminal/Models/TerminalSettings.swift:131`). The app also exposes **Check for Updates…** in the app menu (`Cmd` check after `.appInfo`, `Terminal/TerminalApp.swift:20`).
+Settings are persisted to `UserDefaults` and exposed via `@Observable` `TerminalSettings` (`Terminal/Models/TerminalSettings.swift:147`). The app also exposes **Check for Updates…** in the app menu (`Cmd` check after `.appInfo`, `Terminal/TerminalApp.swift:37`). Hyperlink highlighting uses SwiftTerm's `linkReporting=.implicit` and `linkHighlightMode=.hoverWithModifier` (`Terminal/Views/TerminalBridge.swift:272`); shell integration adds `TERM_PROGRAM`/`TERMINAL_SHELL_INTEGRATION` via `Terminal/Services/ShellIntegration.swift:29` (`zsh`/`bash` OSC 7/133 scripts for manual sourcing).
 
 ## Updates
 
@@ -142,12 +146,13 @@ Each `<item>` contains `sparkle:version` (build), `sparkle:shortVersionString` (
 Terminal.xcodeproj/project.xcproj   # structured Xcode project (replaces pbxproj)
 Terminal/Terminal-Info.plist        # SUFeedURL + SUPublicEDKey
 Terminal/                            # app target sources
-  TerminalApp.swift                 # App entry, updater wiring, menu commands
+  TerminalApp.swift                 # App entry, updater wiring, menu commands (Find, prompt nav)
   ContentView.swift
-  Models/                           # TerminalSettings, WorkspaceStore, Pane/Node types
+  Models/                           # TerminalSettings, WorkspaceStore/WorkspaceTabs, Pane/Node types
   Services/SoftwareUpdater.swift    # Sparkle wrapper
-  Views/                            # SettingsView (General → Updates), workspace chrome
-TerminalTests/                      # hosted unit tests (Themes, WorkspaceStore, splits)
+  Services/ShellIntegration.swift   # TERM_PROGRAM env + zsh/bash OSC 7/133 scripts
+  Views/                            # SettingsView, TerminalBridge (Metal, links, BiDi), workspace chrome
+TerminalTests/                      # hosted unit tests (Themes, WorkspaceStore, splits, shell integration)
 scripts/                            # prepare-dmg.sh, publish-update.sh, release.sh
 docs/appcast.xml                    # Sparkle feed, deployed to Pages
 CHANGELOG.md                        # version (build) headers consumed by publish-update.sh
