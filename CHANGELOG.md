@@ -11,6 +11,6 @@
 - 🔐 Pass your environment to shells so SSH agent and PATH are available.
 - 🪟 Preserve fullscreen toolbar behavior and close confirmation.
 
-## 1.0 (1) (2026-01-01)
+## 1.0 (1) (2026-1-19)
 
 - 🎁 Initial app release

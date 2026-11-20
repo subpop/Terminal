@@ -10,7 +10,17 @@
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/subpop/Terminal/releases/download/v1.1/Terminal-1.1.dmg" length="5570550" type="application/octet-stream" sparkle:edSignature="slVJ+Hd4rKfkpBBRQgS2qr1wFQCTzp9DtJ5QCnc9M4XnWzZxDcfgw9CAdsJU++gmTOQB4eOlhZf/PcrPFao+Dg=="/>
         <description><![CDATA[<div>
-    
+    <h2>1.1 (2) (2026-11-20)</h2>
+<ul>
+<li>🗂️ Add a custom tab bar with drag-to-reorder and ⌘1–⌘9 tab shortcuts.</li>
+<li>🧭 Navigate between split panes with ⌘⇧ arrow keys.</li>
+<li>🖥️ Support clickable terminal links, Sixel graphics, and bidirectional text.</li>
+<li>🐚 Add zsh and bash shell integration for directory tracking and prompt navigation.</li>
+<li>📍 Open new tabs and split panes in the current directory.</li>
+<li>✨ Add prompt navigation (⌥⌘↑/↓) and clear scrollback (⌃⌘K).</li>
+<li>🔐 Pass your environment to shells so SSH agent and PATH are available.</li>
+<li>🪟 Preserve fullscreen toolbar behavior and close confirmation.</li>
+</ul>
 </div>]]></description>
 </item>
         <item>
@@ -22,7 +32,10 @@
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <enclosure url="https://github.com/subpop/Terminal/releases/download/v1.0/Terminal-1.0.dmg" length="5466817" type="application/octet-stream" sparkle:edSignature="jvyzpXqFzdy1TLzYmTiztNLafwsKJ/HgI9AcXC7gHQvztCSVKryKL4PGqU3ChIRRRhs/j+yVfAM1bLAf+EhVCw=="/>
         <description><![CDATA[<div>
-    
+    <h2>1.0 (1) (2026-11-19)</h2>
+<ul>
+<li>🎁 Initial app release</li>
+</ul>
 </div>]]></description>
 </item>
 </channel></rss>
