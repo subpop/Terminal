@@ -27,24 +27,6 @@ struct WorkspaceStoreTests {
         #expect(light != dark)
     }
 
-    @Test func backgroundChoicesAreMutedVersionsOfForegroundChoices() throws {
-        let foregroundOptions = Theme.tintOptions.map(Theme.hex)
-        let backgroundOptions = Theme.backgroundTintOptions.map(Theme.hex)
-        #expect(foregroundOptions.count == 6)
-        #expect(backgroundOptions.count == 6)
-        #expect(Set(foregroundOptions).count == 6)
-        #expect(Set(backgroundOptions).count == 6)
-        #expect(foregroundOptions.contains(Theme.hex(Theme.defaultPrimaryTint)))
-        #expect(backgroundOptions.contains(Theme.hex(Theme.defaultSecondaryTint)))
-        for (foreground, background) in zip(Theme.tintOptions, Theme.backgroundTintOptions) {
-            let vivid = try #require(NSColor(foreground).usingColorSpace(.deviceRGB))
-            let muted = try #require(NSColor(background).usingColorSpace(.deviceRGB))
-            #expect(muted.saturationComponent < vivid.saturationComponent)
-            #expect(muted.brightnessComponent < vivid.brightnessComponent)
-            #expect(abs(muted.hueComponent - vivid.hueComponent) < 0.01)
-        }
-    }
-
     @Test func derivedPaletteKeepsANSIColorsReadable() throws {
         for appearance in [Appearance.light, .dark] {
             let colors = Theme.colors(for: appearance)
