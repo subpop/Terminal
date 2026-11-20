@@ -81,6 +81,7 @@ struct SettingsCommands: Commands {
 struct WorkspaceCommands: Commands {
     let settings: TerminalSettings
     @FocusedValue(\.workspaceStore) var store
+    @FocusedValue(\.workspaceTabs) var tabs
     @Environment(\.openWindow) private var openWindow
 
     var body: some Commands {
@@ -89,6 +90,13 @@ struct WorkspaceCommands: Commands {
                 newTab()
             }
             .keyboardShortcut("t", modifiers: .command)
+
+            Button("Close Tab") {
+                guard let tabs, let workspace = tabs.activeWorkspace else { return }
+                WorkspaceTabActions.closeWorkspace(workspace.windowID, in: tabs, settings: settings)
+            }
+            .keyboardShortcut("w", modifiers: .command)
+            .disabled(tabs == nil)
 
             Divider()
             Button("Split Vertically") {
@@ -114,11 +122,11 @@ struct WorkspaceCommands: Commands {
                 if s.root.leafCount > 1 {
                     s.requestClose(paneID: fid, askBeforeClosing: settings.askBeforeClosing,
                                    hasRunningCommand: LocalTerminalNSView.hasRunningCommand(for: fid))
-                } else {
-                    NSApp.keyWindow?.performClose(nil)
+                } else if let tabs {
+                    WorkspaceTabActions.closeWorkspace(s.windowID, in: tabs, settings: settings)
                 }
-            }.keyboardShortcut("w", modifiers: .command)
-             .disabled(store == nil)
+            }
+            .disabled(store == nil)
         }
         CommandGroup(after: .textEditing) {
             Button("Find…") { find(.showFindInterface) }
@@ -150,33 +158,50 @@ struct WorkspaceCommands: Commands {
             Divider()
         }
         CommandGroup(after: .toolbar) {
-            Button("Show Next Tab") { NSApp.keyWindow?.selectNextTab(nil) }
+            Button("Show Tab 1") { tabs?.selectWorkspace(at: 0) }
+                .keyboardShortcut("1", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 1)
+            Button("Show Tab 2") { tabs?.selectWorkspace(at: 1) }
+                .keyboardShortcut("2", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 2)
+            Button("Show Tab 3") { tabs?.selectWorkspace(at: 2) }
+                .keyboardShortcut("3", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 3)
+            Button("Show Tab 4") { tabs?.selectWorkspace(at: 3) }
+                .keyboardShortcut("4", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 4)
+            Button("Show Tab 5") { tabs?.selectWorkspace(at: 4) }
+                .keyboardShortcut("5", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 5)
+            Button("Show Tab 6") { tabs?.selectWorkspace(at: 5) }
+                .keyboardShortcut("6", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 6)
+            Button("Show Tab 7") { tabs?.selectWorkspace(at: 6) }
+                .keyboardShortcut("7", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 7)
+            Button("Show Tab 8") { tabs?.selectWorkspace(at: 7) }
+                .keyboardShortcut("8", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 8)
+            Button("Show Tab 9") { tabs?.selectWorkspace(at: 8) }
+                .keyboardShortcut("9", modifiers: .command)
+                .disabled((tabs?.workspaces.count ?? 0) < 9)
+
+            Divider()
+            Button("Show Next Tab") { tabs?.selectNextWorkspace() }
                 .keyboardShortcut(.tab, modifiers: [.control])
-                .disabled(store == nil)
-            Button("Show Previous Tab") { NSApp.keyWindow?.selectPreviousTab(nil) }
+                .disabled(tabs == nil || (tabs?.workspaces.count ?? 0) < 2)
+            Button("Show Previous Tab") { tabs?.selectPreviousWorkspace() }
                 .keyboardShortcut(.tab, modifiers: [.control, .shift])
-                .disabled(store == nil)
+                .disabled(tabs == nil || (tabs?.workspaces.count ?? 0) < 2)
         }
     }
 
     private func newTab() {
-        guard store != nil, let keyWindow = NSApp.keyWindow,
-              keyWindow.tabbingIdentifier == "terminal" else {
+        guard let tabs else {
             openWindow(id: "terminal")
             return
         }
-        let existing = Set(NSApp.windows.map(\.windowNumber))
-        openWindow(id: "terminal")
-        Task { @MainActor in
-            for _ in 0..<20 {
-                try? await Task.sleep(for: .milliseconds(50))
-                if let newWindow = NSApp.windows.first(where: { !existing.contains($0.windowNumber) && $0.tabbingIdentifier == "terminal" }) {
-                    keyWindow.addTabbedWindow(newWindow, ordered: .above)
-                    newWindow.makeKeyAndOrderFront(nil)
-                    return
-                }
-            }
-        }
+        tabs.addWorkspace()
     }
 
     private func find(_ action: NSTextFinder.Action) {

@@ -384,6 +384,42 @@ struct WorkspaceStoreTests {
         #expect(WorkspaceRegistry.shared.containsPane(draggedID))
     }
 
+    @Test func workspaceTabsSelectReorderAndRemoveWorkspaces() throws {
+        let tabs = WorkspaceTabs()
+        let first = try #require(tabs.activeWorkspace)
+        defer {
+            for workspace in tabs.workspaces {
+                WorkspaceRegistry.shared.unregister(windowID: workspace.windowID)
+            }
+        }
+
+        let second = tabs.addWorkspace()
+        let third = tabs.addWorkspace()
+        tabs.selectWorkspace(first.windowID)
+        tabs.moveWorkspace(third.windowID, before: first.windowID)
+
+        #expect(tabs.workspaces.map(\.windowID) == [third.windowID, first.windowID, second.windowID])
+        #expect(tabs.activeWorkspaceID == first.windowID)
+
+        tabs.selectNextWorkspace()
+        #expect(tabs.activeWorkspaceID == second.windowID)
+        tabs.selectPreviousWorkspace()
+        #expect(tabs.activeWorkspaceID == first.windowID)
+        tabs.selectWorkspace(at: 2)
+        #expect(tabs.activeWorkspaceID == second.windowID)
+        tabs.selectWorkspace(at: 9)
+        #expect(tabs.activeWorkspaceID == second.windowID)
+
+        let removed = try #require(tabs.removeWorkspace(first.windowID))
+        #expect(removed === first)
+        #expect(tabs.activeWorkspaceID == second.windowID)
+        #expect(tabs.workspaces.map(\.windowID) == [third.windowID, second.windowID])
+
+        #expect(tabs.removeWorkspace(third.windowID) != nil)
+        #expect(tabs.workspaces.count == 1)
+        #expect(tabs.removeWorkspace(second.windowID) == nil)
+    }
+
     @Test func invalidSplitDoesNotCreateAnOrphanPane() {
         let store = WorkspaceStore()
         store.split(over: UUID(), edge: .trailing)

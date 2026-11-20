@@ -19,9 +19,18 @@ struct FocusedWorkspaceKey: FocusedValueKey {
     typealias Value = WorkspaceStore
 }
 
+struct FocusedWorkspaceTabsKey: FocusedValueKey {
+    typealias Value = WorkspaceTabs
+}
+
 extension FocusedValues {
     var workspaceStore: WorkspaceStore? {
         get { self[FocusedWorkspaceKey.self] }
         set { self[FocusedWorkspaceKey.self] = newValue }
+    }
+
+    var workspaceTabs: WorkspaceTabs? {
+        get { self[FocusedWorkspaceTabsKey.self] }
+        set { self[FocusedWorkspaceTabsKey.self] = newValue }
     }
 }

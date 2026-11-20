@@ -23,6 +23,7 @@ struct LocalTerminalNSView: NSViewRepresentable {
     let optionAsMetaKey: Bool
     let bell: TerminalBell
     @Environment(WorkspaceStore.self) var store
+    @Environment(WorkspaceTabs.self) private var tabs
     @Environment(TerminalSettings.self) var settings
     @Environment(\.colorScheme) private var colorScheme
 
@@ -92,6 +93,11 @@ struct LocalTerminalNSView: NSViewRepresentable {
         terminal.performTextFinderAction(item)
     }
 
+    static func focus(_ paneID: UUID) {
+        guard let terminal = cache[paneID] else { return }
+        terminal.window?.makeFirstResponder(terminal)
+    }
+
     static func terminateSessions(_ paneIDs: [UUID]) {
         for paneID in paneIDs {
             cache.removeValue(forKey: paneID)?.terminate()
@@ -122,7 +128,7 @@ struct LocalTerminalNSView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(paneID: paneID, store: store, settings: settings)
+        Coordinator(paneID: paneID, store: store, tabs: tabs, settings: settings)
     }
 
     func makeNSView(context: Context) -> LocalProcessTerminalView {
@@ -184,6 +190,7 @@ struct LocalTerminalNSView: NSViewRepresentable {
         applyAppearance(to: nsView, coordinator: context.coordinator)
         context.coordinator.paneID = paneID
         context.coordinator.store = store
+        context.coordinator.tabs = tabs
         context.coordinator.settings = settings
         context.coordinator.terminal = nsView
         if Self.cache[paneID] !== nsView {
@@ -243,13 +250,15 @@ struct LocalTerminalNSView: NSViewRepresentable {
     final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
         var paneID: UUID
         var store: WorkspaceStore
+        var tabs: WorkspaceTabs
         var settings: TerminalSettings
         weak var terminal: LocalProcessTerminalView?
         var installedPalette: [SwiftTerm.Color]?
 
-        init(paneID: UUID, store: WorkspaceStore, settings: TerminalSettings) {
+        init(paneID: UUID, store: WorkspaceStore, tabs: WorkspaceTabs, settings: TerminalSettings) {
             self.paneID = paneID
             self.store = store
+            self.tabs = tabs
             self.settings = settings
         }
 
@@ -274,13 +283,13 @@ struct LocalTerminalNSView: NSViewRepresentable {
             case .closeAlways:
                 store.close(paneID: paneID)
                 if store.panes.isEmpty {
-                    Task { @MainActor in source.window?.close() }
+                    Task { @MainActor in WorkspaceTabActions.closeAfterProcessExit(store, in: tabs) }
                 }
             case .closeIfClean:
                 if isClean {
                     store.close(paneID: paneID)
                     if store.panes.isEmpty {
-                        Task { @MainActor in source.window?.close() }
+                        Task { @MainActor in WorkspaceTabActions.closeAfterProcessExit(store, in: tabs) }
                     }
                 } else {
                     // Keep pane, show exit status

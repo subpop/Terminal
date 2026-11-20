@@ -18,18 +18,14 @@ import AppKit
 struct WorkspaceTabBarView: View {
     @Environment(WorkspaceTabs.self) private var tabs
     @Environment(TerminalSettings.self) private var settings
+    @State private var hoveredCloseWorkspaceID: UUID?
 
     var body: some View {
-        HStack(spacing: 8) {
-            ScrollView(.horizontal) {
-                HStack(spacing: 4) {
-                    ForEach(tabs.workspaces, id: \.windowID) { workspace in
-                        tab(for: workspace)
-                    }
-                }
-                .padding(.horizontal, 8)
+        HStack(spacing: 4) {
+            ForEach(tabs.workspaces, id: \.windowID) { workspace in
+                tab(for: workspace)
+                    .frame(maxWidth: .infinity)
             }
-            .scrollIndicators(.hidden)
 
             Button("New Tab", systemImage: "plus") {
                 tabs.addWorkspace()
@@ -37,25 +33,47 @@ struct WorkspaceTabBarView: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
             .help("New Tab (⌘T)")
-            .padding(.trailing, 10)
+            .padding(.horizontal, 8)
         }
         .frame(height: 38)
+        .animation(.snappy(duration: 0.24), value: tabs.workspaces.map(\.windowID))
         .background(.bar)
     }
 
     private func tab(for workspace: WorkspaceStore) -> some View {
         let title = tabTitle(for: workspace)
+        let subtitle = tabSubtitle(for: workspace) ?? title
+        let index = tabs.workspaces.firstIndex(where: { $0.windowID == workspace.windowID })
+        let shortcut = index.flatMap(tabShortcut(for:))
         let isSelected = tabs.activeWorkspaceID == workspace.windowID
 
-        return HStack(spacing: 6) {
-            Button("Select \(title)") {
+        return HStack(spacing: 0) {
+            Button {
                 tabs.selectWorkspace(workspace.windowID)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(subtitle)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .layoutPriority(-1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if let shortcut {
+                        Text(shortcut)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize()
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, 10)
+                .padding(.trailing, 8)
+                .frame(height: 34)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .lineLimit(1)
-            .truncationMode(.middle)
-            .frame(maxWidth: 180, alignment: .leading)
-            .help(title)
+            .accessibilityLabel(subtitle)
+            .accessibilityHint("Switch to tab")
+            .help(subtitle)
 
             Button("Close \(title)", systemImage: "xmark") {
                 WorkspaceTabActions.closeWorkspace(workspace.windowID, in: tabs, settings: settings)
@@ -63,11 +81,19 @@ struct WorkspaceTabBarView: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
             .font(.caption2)
+            .frame(width: 20, height: 20)
+            .background {
+                if hoveredCloseWorkspaceID == workspace.windowID {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(.quaternary)
+                }
+            }
+            .frame(width: 26, height: 34)
+            .onHover { isHovered in
+                hoveredCloseWorkspaceID = isHovered ? workspace.windowID : nil
+            }
             .help("Close Tab")
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 6)
-        .frame(height: 28)
         .background {
             if isSelected {
                 RoundedRectangle(cornerRadius: 7)
@@ -77,9 +103,15 @@ struct WorkspaceTabBarView: View {
         .draggable(workspace.windowID.uuidString)
         .dropDestination(for: String.self) { values, _ in
             guard let value = values.first, let draggedID = UUID(uuidString: value) else { return false }
-            tabs.moveWorkspace(draggedID, before: workspace.windowID)
+            withAnimation(.snappy(duration: 0.24)) {
+                tabs.moveWorkspace(draggedID, before: workspace.windowID)
+            }
             return true
         }
+        .transition(.asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .opacity
+        ))
         .accessibilityElement(children: .contain)
     }
 
@@ -87,6 +119,16 @@ struct WorkspaceTabBarView: View {
         settings.titleLabel.text(title: workspace.title, directory: workspace.currentDirectory,
                                  processName: workspace.processName, customText: settings.titleCustomText)
             ?? TitleLabelContent.applicationName
+    }
+
+    private func tabSubtitle(for workspace: WorkspaceStore) -> String? {
+        settings.subtitleLabel.text(title: workspace.title, directory: workspace.currentDirectory,
+                                    processName: workspace.processName, customText: settings.subtitleCustomText)
+    }
+
+    private func tabShortcut(for index: Int) -> String? {
+        guard index < 9 else { return nil }
+        return "⌘\(index + 1)"
     }
 }
 

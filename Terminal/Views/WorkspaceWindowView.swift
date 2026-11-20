@@ -44,6 +44,7 @@ struct WorkspaceWindowView: View {
                     .zIndex(tabs.activeWorkspaceID == workspace.windowID ? 1 : 0)
             }
         }
+        .animation(.easeInOut(duration: 0.16), value: tabs.activeWorkspaceID)
         .frame(minWidth: 500, minHeight: 300)
         .toolbar {
             if activeWorkspace != nil {

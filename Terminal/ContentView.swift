@@ -16,14 +16,22 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(TerminalSettings.self) var settings
-    @State private var store = WorkspaceStore()
+    @Environment(TerminalSettings.self) private var settings
+    @State private var tabs = WorkspaceTabs()
 
     var body: some View {
-        WorkspaceWindowView()
-            .environment(store)
-            .environment(settings)
-            .frame(minWidth: 640, minHeight: 400)
+        VStack(spacing: 0) {
+            if tabs.workspaces.count > 1 {
+                WorkspaceTabBarView()
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            WorkspaceWindowView()
+                .frame(minWidth: 640, minHeight: 400)
+        }
+        .animation(.snappy(duration: 0.24), value: tabs.workspaces.count)
+        .environment(tabs)
+        .environment(settings)
+        .focusedSceneValue(\.workspaceTabs, tabs)
     }
 }
 

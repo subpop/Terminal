@@ -45,6 +45,11 @@ final class WorkspaceTabs {
         activeWorkspaceID = workspaceID
     }
 
+    func selectWorkspace(at index: Int) {
+        guard workspaces.indices.contains(index) else { return }
+        activeWorkspaceID = workspaces[index].windowID
+    }
+
     func selectNextWorkspace() {
         selectWorkspace(offset: 1)
     }
