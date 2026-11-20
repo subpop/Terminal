@@ -224,6 +224,12 @@ final class TerminalSettings {
     var bell: TerminalBell {
         didSet { UserDefaults.standard.set(bell.rawValue, forKey: Keys.bell) }
     }
+    var enableOsc8Hyperlinks: Bool {
+        didSet { UserDefaults.standard.set(enableOsc8Hyperlinks, forKey: Keys.enableOsc8Hyperlinks) }
+    }
+    var enableShellIntegration: Bool {
+        didSet { UserDefaults.standard.set(enableShellIntegration, forKey: Keys.enableShellIntegration) }
+    }
     private enum Keys {
         static let appearance = "appearance"
         static let primaryTint = "primaryTint"
@@ -250,6 +256,8 @@ final class TerminalSettings {
         static let deleteSendsControlH = "deleteSendsControlH"
         static let optionAsMetaKey = "optionAsMetaKey"
         static let bell = "bell"
+        static let enableOsc8Hyperlinks = "enableOsc8Hyperlinks"
+        static let enableShellIntegration = "enableShellIntegration"
     }
 
     init() {
@@ -315,6 +323,8 @@ final class TerminalSettings {
         deleteSendsControlH = UserDefaults.standard.object(forKey: Keys.deleteSendsControlH) as? Bool ?? false
         optionAsMetaKey = UserDefaults.standard.object(forKey: Keys.optionAsMetaKey) as? Bool ?? true
         bell = UserDefaults.standard.string(forKey: Keys.bell).flatMap(TerminalBell.init(rawValue:)) ?? .sound
+        enableOsc8Hyperlinks = UserDefaults.standard.object(forKey: Keys.enableOsc8Hyperlinks) as? Bool ?? true
+        enableShellIntegration = UserDefaults.standard.object(forKey: Keys.enableShellIntegration) as? Bool ?? true
     }
 
     static func defaultShell() -> String {

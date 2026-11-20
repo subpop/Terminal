@@ -98,6 +98,23 @@ struct LocalTerminalNSView: NSViewRepresentable {
         terminal.window?.makeFirstResponder(terminal)
     }
 
+    static func jumpToPreviousPrompt(for paneID: UUID) {
+        guard let terminal = cache[paneID] else { return }
+        guard let row = terminal.previousSemanticPromptRow() else { return }
+        terminal.scrollTo(row: row)
+    }
+
+    static func jumpToNextPrompt(for paneID: UUID) {
+        guard let terminal = cache[paneID] else { return }
+        guard let row = terminal.nextSemanticPromptRow() else { return }
+        terminal.scrollTo(row: row)
+    }
+
+    static func clearScrollback(for paneID: UUID) {
+        guard let terminal = cache[paneID] else { return }
+        terminal.clearScrollback()
+    }
+
     static func terminateSessions(_ paneIDs: [UUID]) {
         for paneID in paneIDs {
             cache.removeValue(forKey: paneID)?.terminate()
@@ -148,15 +165,23 @@ struct LocalTerminalNSView: NSViewRepresentable {
             return cached
         }
 
-        let options = TerminalOptions(
+        var options = TerminalOptions(
             cols: settings.defaultCols,
             rows: settings.defaultRows,
             termName: settings.terminalType.rawValue,
             cursorStyle: settings.swiftTermCursorStyle,
             scrollback: settings.scrollbackLines
         )
+        options.enableOsc8Hyperlinks = settings.enableOsc8Hyperlinks
+        options.enableSixelReported = true
+        options.initialBidiState = .default
+        options.maximumBidiParagraphRows = 500
+        options.initialBidiArrowKeySwap = false
         let terminal = ConfirmingTerminalView(frame: .zero, options: options)
         terminal.font = settings.terminalFont
+        terminal.linkReporting = .implicit
+        terminal.linkHighlightMode = .hoverWithModifier
+        terminal.bidiHostPolicy = .respectTerminal
         applyAppearance(to: terminal, coordinator: context.coordinator)
         terminal.processDelegate = context.coordinator
         try? terminal.setUseMetal(true)
@@ -167,10 +192,21 @@ struct LocalTerminalNSView: NSViewRepresentable {
             shellNames.contains(URL(fileURLWithPath: resolved.executable).lastPathComponent) {
             terminal.shellExecutable = resolved.executable
         }
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let paneDirectory = store.panes[paneID]?.currentDirectory
+            ?? FileManager.default.homeDirectoryForCurrentUser.path
+        let currentDirectory: String
+        if FileManager.default.fileExists(atPath: paneDirectory) {
+            currentDirectory = paneDirectory
+        } else {
+            currentDirectory = FileManager.default.homeDirectoryForCurrentUser.path
+        }
+        let environment = ShellIntegration.environment(
+            base: settings.terminalType.processEnvironment,
+            enableShellIntegration: settings.enableShellIntegration
+        )
         terminal.startProcess(executable: resolved.executable, args: resolved.args,
-                              environment: settings.terminalType.processEnvironment,
-                              execName: resolved.execName, currentDirectory: home)
+                              environment: environment,
+                              execName: resolved.execName, currentDirectory: currentDirectory)
 
         context.coordinator.terminal = terminal
         Self.cache[paneID] = terminal
@@ -244,6 +280,10 @@ struct LocalTerminalNSView: NSViewRepresentable {
         view.backspaceSendsControlH = deleteSendsControlH
         view.optionAsMetaKey = optionAsMetaKey
         view.bellStyle = bell.swiftTermStyle
+        view.enableOsc8Hyperlinks = settings.enableOsc8Hyperlinks
+        view.linkReporting = .implicit
+        view.linkHighlightMode = .hoverWithModifier
+        view.bidiHostPolicy = .respectTerminal
     }
 
     @MainActor

@@ -136,6 +136,17 @@ struct WorkspaceCommands: Commands {
             Button("Find Previous") { find(.previousMatch) }
                 .keyboardShortcut("g", modifiers: [.command, .shift])
         }
+        CommandGroup(after: .toolbar) {
+            Button("Previous Prompt") { jumpToPreviousPrompt() }
+                .keyboardShortcut(.upArrow, modifiers: [.command, .option])
+                .disabled(store?.focusedPaneID == nil)
+            Button("Next Prompt") { jumpToNextPrompt() }
+                .keyboardShortcut(.downArrow, modifiers: [.command, .option])
+                .disabled(store?.focusedPaneID == nil)
+            Button("Clear to Start") { clearScrollback() }
+                .keyboardShortcut("k", modifiers: [.command, .control])
+                .disabled(store?.focusedPaneID == nil)
+        }
         CommandGroup(before: .toolbar) {
             Button("Increase Font Size") {
                 settings.fontSize = min(settings.fontSize + 1, TerminalSettings.maximumFontSize)
@@ -207,5 +218,20 @@ struct WorkspaceCommands: Commands {
     private func find(_ action: NSTextFinder.Action) {
         guard let paneID = store?.focusedPaneID else { return }
         LocalTerminalNSView.performFind(action, for: paneID)
+    }
+
+    private func jumpToPreviousPrompt() {
+        guard let paneID = store?.focusedPaneID else { return }
+        LocalTerminalNSView.jumpToPreviousPrompt(for: paneID)
+    }
+
+    private func jumpToNextPrompt() {
+        guard let paneID = store?.focusedPaneID else { return }
+        LocalTerminalNSView.jumpToNextPrompt(for: paneID)
+    }
+
+    private func clearScrollback() {
+        guard let paneID = store?.focusedPaneID else { return }
+        LocalTerminalNSView.clearScrollback(for: paneID)
     }
 }

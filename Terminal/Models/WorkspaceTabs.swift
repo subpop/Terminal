@@ -33,7 +33,19 @@ final class WorkspaceTabs {
 
     @discardableResult
     func addWorkspace() -> WorkspaceStore {
+        let inheritedDirectory = activeWorkspace?.currentDirectory
+        let inheritedReports = activeWorkspace.flatMap { ws in
+            ws.focusedPaneID.flatMap { ws.panes[$0]?.reportsCurrentDirectory }
+                ?? ws.panes.values.first?.reportsCurrentDirectory
+        } ?? false
         let workspace = WorkspaceStore()
+        if let inheritedDirectory, !inheritedDirectory.isEmpty,
+           let paneID = workspace.root.leafIDs.first,
+           var pane = workspace.panes[paneID] {
+            pane.currentDirectory = inheritedDirectory
+            pane.reportsCurrentDirectory = inheritedReports
+            workspace.panes[paneID] = pane
+        }
         workspaces.append(workspace)
         activeWorkspaceID = workspace.windowID
         WorkspaceRegistry.shared.register(workspace)

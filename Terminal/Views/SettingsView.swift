@@ -476,6 +476,18 @@ private struct TerminalSettingsContent: View {
                 Text("Sets TERM for new sessions.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Toggle("Enable OSC 8 hyperlinks", isOn: $s.enableOsc8Hyperlinks)
+                Text("Allows clickable links from terminal programs. Disabling keeps text detection only.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Shell integration") {
+                Toggle("Enable shell integration", isOn: $s.enableShellIntegration)
+                Text("Sets TERM_PROGRAM and TERMINAL_SHELL_INTEGRATION for new sessions. Source the bundled zsh/bash scripts in your dotfiles for prompt marking.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Input") {

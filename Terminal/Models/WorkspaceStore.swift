@@ -53,8 +53,11 @@ final class WorkspaceStore {
 
     // Create new pane and return its ID
     @discardableResult
-    func createPane(title: String = "Terminal") -> UUID {
-        let pane = PaneModel(title: title)
+    func createPane(title: String = "Terminal", initialDirectory: String? = nil) -> UUID {
+        var pane = PaneModel(title: title)
+        if let initialDirectory, !initialDirectory.isEmpty {
+            pane.currentDirectory = initialDirectory
+        }
         panes[pane.id] = pane
         return pane.id
     }
@@ -121,7 +124,8 @@ final class WorkspaceStore {
             // swap via DnD handled separately
             return
         }
-        let nid = createPane()
+        let inheritedDirectory = panes[targetID]?.currentDirectory
+        let nid = createPane(initialDirectory: inheritedDirectory)
         root = root.splitting(leaf: targetID, direction: edge, newPaneID: nid)
         maximizedPaneID = nil
         focusedPaneID = nid

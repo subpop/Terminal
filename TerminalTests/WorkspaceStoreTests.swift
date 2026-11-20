@@ -427,4 +427,56 @@ struct WorkspaceStoreTests {
         #expect(store.panes.count == 1)
         #expect(store.root.leafCount == 1)
     }
+
+    @Test func splitInheritsCurrentDirectory() throws {
+        let store = WorkspaceStore()
+        let first = try #require(store.focusedPaneID)
+        store.setCurrentDirectory("file://localhost/tmp", for: first)
+        store.split(over: first, edge: .trailing)
+        let second = try #require(store.focusedPaneID)
+        #expect(store.panes[second]?.currentDirectory == "/tmp")
+        #expect(store.currentDirectory == "/tmp")
+    }
+
+    @Test func newTabInheritsCurrentDirectory() throws {
+        let tabs = WorkspaceTabs()
+        let firstWorkspace = try #require(tabs.activeWorkspace)
+        let firstPane = try #require(firstWorkspace.focusedPaneID)
+        defer {
+            for workspace in tabs.workspaces {
+                WorkspaceRegistry.shared.unregister(windowID: workspace.windowID)
+            }
+        }
+        firstWorkspace.setCurrentDirectory("file://localhost/tmp", for: firstPane)
+        let secondWorkspace = tabs.addWorkspace()
+        #expect(secondWorkspace.currentDirectory == "/tmp")
+    }
+
+    @Test func shellIntegrationEnvironmentAddsTerminalProgram() {
+        let base = TerminalType.xterm256color.processEnvironment
+        let env = ShellIntegration.environment(base: base, enableShellIntegration: true)
+        #expect(env.contains("TERM_PROGRAM=Terminal"))
+        #expect(env.contains("TERMINAL_SHELL_INTEGRATION=1"))
+        #expect(env.contains("COLORTERM=truecolor"))
+        #expect(env.contains(where: { $0.hasPrefix("TERM=") }))
+
+        let disabled = ShellIntegration.environment(base: base, enableShellIntegration: false)
+        #expect(!disabled.contains("TERMINAL_SHELL_INTEGRATION=1"))
+        #expect(disabled.contains("TERM_PROGRAM=Terminal"))
+    }
+
+    @Test func shellIntegrationDoesNotOverrideExistingEnv() {
+        let base = ["TERM=xterm-256color", "TERM_PROGRAM=Custom", "COLORTERM=truecolor"]
+        let env = ShellIntegration.environment(base: base, enableShellIntegration: true)
+        #expect(env.contains("TERM_PROGRAM=Custom"))
+        #expect(!env.contains("TERM_PROGRAM=Terminal"))
+        #expect(env.filter { $0.hasPrefix("TERM_PROGRAM=") }.count == 1)
+    }
+
+    @Test func shellIntegrationScriptsContainOscSequences() {
+        #expect(ShellIntegration.zshScript.contains("133;A"))
+        #expect(ShellIntegration.zshScript.contains("133;D"))
+        #expect(ShellIntegration.bashScript.contains("133;C"))
+        #expect(ShellIntegration.zshScript.contains("file://"))
+    }
 }
