@@ -24,12 +24,7 @@ struct TerminalApp: App {
 
     var body: some Scene {
         WindowGroup(id: "terminal") {
-            ContentView()
-                .environment(settings)
-                .preferredColorScheme(settings.appearance.colorScheme)
-                .onChange(of: settings.appearance, initial: true) { _, appearance in
-                    updateDockIcon(for: appearance)
-                }
+            TerminalWindowRoot(settings: settings, appDelegate: appDelegate)
         }
         .commands {
             WorkspaceCommands(settings: settings)
@@ -54,6 +49,32 @@ struct TerminalApp: App {
         }
         .defaultSize(width: 700, height: 440)
         .windowResizability(.contentMinSize)
+    }
+
+    private func updateDockIcon(for appearance: Appearance) {
+        switch appearance {
+        case .system: NSApp.applicationIconImage = nil
+        case .light: NSApp.applicationIconImage = NSImage(named: "DockIconLight")
+        case .dark: NSApp.applicationIconImage = NSImage(named: "DockIconDark")
+        }
+    }
+}
+
+private struct TerminalWindowRoot: View {
+    let settings: TerminalSettings
+    let appDelegate: AppDelegate
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        ContentView()
+            .environment(settings)
+            .preferredColorScheme(settings.appearance.colorScheme)
+            .onChange(of: settings.appearance, initial: true) { _, appearance in
+                updateDockIcon(for: appearance)
+            }
+            .onAppear {
+                appDelegate.openNewWindow = { openWindow(id: "terminal") }
+            }
     }
 
     private func updateDockIcon(for appearance: Appearance) {
